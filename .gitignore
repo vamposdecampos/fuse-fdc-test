@@ -1,0 +1,3 @@
+*.o
+*.tap
+zcc_opt.def

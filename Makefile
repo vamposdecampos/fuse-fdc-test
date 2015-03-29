@@ -1,16 +1,25 @@
-CC	= zcc
-CFLAGS	= -Wall -Werror
-LDFLAGS	= +zx -lndos -create-app
+CC	= sdcc
+CFLAGS	= -mz80 --std-sdcc99 --Werror --opt-code-size
+LDFLAGS	= -mz80 --out-fmt-ihx --no-std-crt0 --code-loc 0x8000
+PASMO	= pasmo
+OBJCOPY	= objcopy
+
 
 TARGET	= fdc_test
 
 all:	$(TARGET).tap
 
-%.tap: %.c
+%.tap: %_loader.asm %.bin
+	$(PASMO) --tapbas $< $@
+
+%.bin: %.hex
+	$(OBJCOPY) -I ihex -O binary $< $@
+
+%.hex: %.c
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $<
 
 %.asm: %.c
 	$(CC) $(CFLAGS) -a -o $@ $<
 
 clean:
-	rm -f *.tap *.o zcc_opt.def
+	rm -f $(TARGET).tap $(TARGET).o $(TARGET).hex $(TARGET).bin $(TARGET).rel $(TARGET).lst $(TARGET).lk $(TARGET).noi $(TARGET).map $(TARGET).sym

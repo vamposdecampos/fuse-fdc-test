@@ -1,54 +1,51 @@
 #include <stdio.h>
 
+int main(void);
+int _start(void)
+{
+	return main();
+}
+
+void putchar(char ch)
+{
+	ch;
+	__asm
+	ld	hl,#2
+	add	hl,sp
+	ld	a,(hl)
+	rst	0x10
+	__endasm;
+}
+
 /* Spectrum +3 */
 
-static void __FASTCALL__ fdc_write(unsigned char val)
+__sfr __banked __at(0x3ffd) fdc_data_port;
+__sfr __banked __at(0x2ffd) fdc_status_port;
+__sfr __banked __at(0x1ffd) plus3_memory_port;
+
+static void fdc_write(unsigned char val)
 {
-	#asm
-	ld a, l
-	ld bc, 0x3ffd
-	out (c), a
-	#endasm
+	fdc_data_port = val;
 }
 
-static unsigned char __FASTCALL__ fdc_read(void)
+static unsigned char fdc_read(void)
 {
-	#asm
-	xor a
-	ld h, a
-	ld bc, 0x3ffd
-	in a, (c)
-	ld l, a
-	#endasm
+	return fdc_data_port;
 }
 
-static unsigned char __FASTCALL__ fdc_status(void)
+static unsigned char fdc_status(void)
 {
-	#asm
-	xor a
-	ld h, a
-	ld bc, 0x2ffd
-	in a, (c)
-	ld l, a
-	#endasm
+	return fdc_status_port;
 }
 
-static void __FASTCALL__ fdc_motor_on(void)
+static void fdc_motor_on(void)
 {
-	#asm
-	ld bc, 0x1ffd
-	ld a, 0x0c
-	out (c), a
-	#endasm
+	plus3_memory_port = 4 | 8;
 }
 
-static void __FASTCALL__ fdc_motor_off(void)
+static void fdc_motor_off(void)
 {
-	#asm
-	ld bc, 0x1ffd
-	ld a, 0x04
-	out (c), a
-	#endasm
+	plus3_memory_port = 4;
 }
 
 
@@ -63,7 +60,7 @@ static void sense_drive_status(void)
 
 int main(void)
 {
-	printf("%cuPD765 / i8272 FDC tester\n\n",12);
+	printf("uPD765 / i8272 FDC tester\r");
 
 	fdc_motor_on();
 	sense_drive_status();

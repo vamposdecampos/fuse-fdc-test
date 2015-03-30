@@ -99,6 +99,8 @@ static void fdc_motor_off(void)
 
 #define ST2_READY		0x20
 
+#define CMD_INVALID		0
+
 static void write_cmd(unsigned char count, unsigned char *cmd)
 {
 	while (count) {
@@ -162,6 +164,14 @@ static void specify(void)
 	read_res(0, NULL);
 }
 
+/* well, sort of. */
+static void reset_fdc(void)
+{
+	fdc_write(CMD_INVALID);
+	while (fdc_status() & MAIN_BUSY)
+		fdc_read();
+}
+
 int main(void)
 {
 	unsigned char k;
@@ -170,6 +180,8 @@ int main(void)
 	putstring("uPD765 / i8272 FDC tester\r");
 
 	fdc_motor_on();
+
+	reset_fdc();
 	specify();
 
 	for (k = 0; k < 255; k++) {

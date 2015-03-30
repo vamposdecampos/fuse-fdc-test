@@ -95,13 +95,23 @@ static void fdc_motor_off(void)
 /* generic */
 
 #define MAIN_BUSY		0x10
+#define MAIN_EXEC		0x20
+#define MAIN_DIN		0x40 /* CPU reads data */
 #define MAIN_RQM		0x80
 
 #define ST2_READY		0x20
 
+/* commands */
 #define CMD_INVALID		0
 #define CMD_SPECIFY		3
-#define CMD_SENSE_DRIVE_STATUS	4
+#define CMD_SENSE_DRIVE		4
+#define CMD_READ_DATA		6
+#define CMD_RECALIBRATE		7
+#define CMD_SENSE_INT		8
+/* command flags */
+#define CMD_MT			0x80
+#define CMD_MF			0x40
+#define CMD_SK			0x20
 
 static void write_cmd(unsigned char count, unsigned char *cmd)
 {
@@ -148,7 +158,7 @@ static unsigned char sense_drive_status(unsigned char unit)
 	unsigned char cmd[2];
 	unsigned char res[1];
 
-	cmd[0] = CMD_SENSE_DRIVE_STATUS;
+	cmd[0] = CMD_SENSE_DRIVE;
 	cmd[1] = unit & 3;
 	write_cmd(sizeof(cmd), cmd);
 	read_res(sizeof(res), res);
@@ -172,6 +182,42 @@ static void reset_fdc(void)
 	fdc_write(CMD_INVALID);
 	while (fdc_status() & MAIN_BUSY)
 		fdc_read();
+}
+
+static void run_test(void)
+{
+	unsigned char cmd[9];
+	unsigned char res[7];
+	long k;
+
+	cmd[0] = CMD_READ_DATA | CMD_MF;
+	cmd[1] = 0;
+	cmd[2] = 0;	/* C */
+	cmd[3] = 0;	/* H */
+	cmd[4] = 1;	/* R */
+	cmd[5] = 2;	/* N */
+	cmd[6] = 18;	/* EOT */
+	cmd[7] = 0x2a;	/* GPL */
+	cmd[8] = 0xff;	/* DTL */
+	write_cmd(sizeof(cmd), cmd);
+
+	k = 0;
+	for (;;) {
+		unsigned char status = fdc_status();
+		if (!(status & MAIN_EXEC))
+			break;
+		if (status & MAIN_RQM) {
+			if (status & MAIN_DIN) {
+				fdc_read();
+				k++;
+			}
+		}
+	}
+	read_res(sizeof(res), res);
+	putstring("bytes read: 0x");
+	puthex(k >> 8);
+	puthex(k & 0xff);
+	putchar('\r');
 }
 
 int main(void)
@@ -206,6 +252,7 @@ int main(void)
 		putstring("no drives online\r");
 	} else {
 		print_value("drive online after: ", k);
+		run_test();
 	}
 	fdc_motor_off();
 	return 0;

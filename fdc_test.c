@@ -131,27 +131,29 @@ static void print_value(const char *what, unsigned char val)
 	putchar('\r');
 }
 
-static void sense_drive_status(void)
+static void sense_drive_status(unsigned char unit)
 {
 	unsigned char cmd[2];
 	unsigned char res[1];
 
+	unit;
 	cmd[0] = 4;
-	cmd[1] = 0;
+	cmd[1] = unit;
 	write_cmd(sizeof(cmd), cmd);
 	read_res(sizeof(res), res);
 
-	print_value("status: 0x", fdc_status());
-	print_value("result: 0x", res[0]);
+	print_value("drive_status: 0x", res[0]);
 }
-
 
 int main(void)
 {
+	unsigned char unit;
+
 	putstring("uPD765 / i8272 FDC tester\r");
 
 	fdc_motor_on();
-	sense_drive_status();
+	for (unit = 0; unit < 4; unit++)
+		sense_drive_status(unit);
 	fdc_motor_off();
 	return 0;
 }

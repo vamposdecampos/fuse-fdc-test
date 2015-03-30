@@ -100,6 +100,8 @@ static void fdc_motor_off(void)
 #define ST2_READY		0x20
 
 #define CMD_INVALID		0
+#define CMD_SPECIFY		3
+#define CMD_SENSE_DRIVE_STATUS	4
 
 static void write_cmd(unsigned char count, unsigned char *cmd)
 {
@@ -146,7 +148,7 @@ static unsigned char sense_drive_status(unsigned char unit)
 	unsigned char cmd[2];
 	unsigned char res[1];
 
-	cmd[0] = 4;
+	cmd[0] = CMD_SENSE_DRIVE_STATUS;
 	cmd[1] = unit & 3;
 	write_cmd(sizeof(cmd), cmd);
 	read_res(sizeof(res), res);
@@ -157,7 +159,7 @@ static void specify(void)
 {
 	unsigned char cmd[3];
 
-	cmd[0] = 3;
+	cmd[0] = CMD_SPECIFY;
 	cmd[1] = 0xaf;
 	cmd[2] = 3;
 	write_cmd(sizeof(cmd), cmd);

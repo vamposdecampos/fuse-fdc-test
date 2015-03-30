@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 int main(void);
 int _start(void)
 {
@@ -8,13 +6,43 @@ int _start(void)
 
 void putchar(char ch)
 {
-	ch;
+	(void) ch;
 	__asm
 	ld	hl,#2
 	add	hl,sp
 	ld	a,(hl)
 	rst	0x10
 	__endasm;
+}
+
+void putstring(const char *ch)
+{
+	ch;
+	__asm
+	ld	hl,#2
+	add	hl,sp
+	ld	a, (hl)
+	inc	hl
+	ld	h, (hl)
+	ld	l, a
+again:
+	ld	a,(hl)
+	or	a
+	ret	z
+	push	hl
+	rst	0x10
+	pop	hl
+	inc	hl
+	jr	again
+	__endasm;
+}
+
+const char hex_str[] = "0123456789abcdef";
+
+void puthex(unsigned char val)
+{
+	putchar(hex_str[val >> 4]);
+	putchar(hex_str[val & 0xf]);
 }
 
 /* Spectrum +3 */
@@ -48,19 +76,27 @@ static void fdc_motor_off(void)
 	plus3_memory_port = 4;
 }
 
+/* generic */
+
+static void print_value(const char *what, unsigned char val)
+{
+	putstring(what);
+	puthex(val);
+	putchar('\r');
+}
 
 static void sense_drive_status(void)
 {
 	fdc_write(4);
 	fdc_write(0);
-	printf("status: 0x%02x\n", fdc_status());
-	printf("result: 0x%02x\n", fdc_read());
+	print_value("status: 0x", fdc_status());
+	print_value("result: 0x", fdc_read());
 }
 
 
 int main(void)
 {
-	printf("uPD765 / i8272 FDC tester\r");
+	putstring("uPD765 / i8272 FDC tester\r");
 
 	fdc_motor_on();
 	sense_drive_status();

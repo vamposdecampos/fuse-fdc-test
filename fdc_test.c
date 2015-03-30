@@ -94,12 +94,15 @@ static void fdc_motor_off(void)
 
 /* generic */
 
-#define ST2_READY	0x20
+#define MAIN_BUSY		0x10
+#define MAIN_RQM		0x80
+
+#define ST2_READY		0x20
 
 static void write_cmd(unsigned char count, unsigned char *cmd)
 {
 	while (count) {
-		while (!(fdc_status() & 0x80))
+		while (!(fdc_status() & MAIN_RQM))
 			;
 		fdc_write(*cmd);
 		cmd++;
@@ -115,9 +118,9 @@ static void read_res(unsigned char count, unsigned char *res)
 	while (1) {
 		do {
 			status = fdc_status();
-			if (!(status & 0x10))
+			if (!(status & MAIN_BUSY))
 				return;
-		} while (!(status & 0x80));
+		} while (!(status & MAIN_RQM));
 
 
 		data = fdc_read();

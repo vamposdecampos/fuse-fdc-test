@@ -78,6 +78,39 @@ static void fdc_motor_off(void)
 
 /* generic */
 
+static void write_cmd(unsigned char count, unsigned char *cmd)
+{
+	while (count) {
+		while (!(fdc_status() & 0x80))
+			;
+		fdc_write(*cmd);
+		cmd++;
+		count--;
+	}
+}
+
+static void read_res(unsigned char count, unsigned char *res)
+{
+	unsigned char status;
+	unsigned char data;
+
+	while (1) {
+		do {
+			status = fdc_status();
+			if (!(status & 0x10))
+				return;
+		} while (!(status & 0x80));
+
+
+		data = fdc_read();
+		if (count) {
+			*res = data;
+			res++;
+			count--;
+		}
+	}
+}
+
 static void print_value(const char *what, unsigned char val)
 {
 	putstring(what);
@@ -87,10 +120,16 @@ static void print_value(const char *what, unsigned char val)
 
 static void sense_drive_status(void)
 {
-	fdc_write(4);
-	fdc_write(0);
+	unsigned char cmd[2];
+	unsigned char res[1];
+
+	cmd[0] = 4;
+	cmd[1] = 0;
+	write_cmd(sizeof(cmd), cmd);
+	read_res(sizeof(res), res);
+
 	print_value("status: 0x", fdc_status());
-	print_value("result: 0x", fdc_read());
+	print_value("result: 0x", res[0]);
 }
 
 

@@ -1,3 +1,6 @@
+#define NULL ((void *) 0)
+#define PRINT_AT	0x16
+
 int main(void);
 
 unsigned short saved_iy;
@@ -91,6 +94,8 @@ static void fdc_motor_off(void)
 
 /* generic */
 
+#define ST2_READY	0x20
+
 static void write_cmd(unsigned char count, unsigned char *cmd)
 {
 	while (count) {
@@ -131,29 +136,60 @@ static void print_value(const char *what, unsigned char val)
 	putchar('\r');
 }
 
-static void sense_drive_status(unsigned char unit)
+static unsigned char sense_drive_status(unsigned char unit)
 {
 	unsigned char cmd[2];
 	unsigned char res[1];
 
-	unit;
 	cmd[0] = 4;
-	cmd[1] = unit;
+	cmd[1] = unit & 3;
 	write_cmd(sizeof(cmd), cmd);
 	read_res(sizeof(res), res);
+	return res[0];
+}
 
-	print_value("drive_status: 0x", res[0]);
+static void specify(void)
+{
+	unsigned char cmd[3];
+
+	cmd[0] = 3;
+	cmd[1] = 0xaf;
+	cmd[2] = 3;
+	write_cmd(sizeof(cmd), cmd);
+	read_res(0, NULL);
 }
 
 int main(void)
 {
-	unsigned char unit;
+	unsigned char k;
+	unsigned char online = 0;
 
 	putstring("uPD765 / i8272 FDC tester\r");
 
 	fdc_motor_on();
-	for (unit = 0; unit < 4; unit++)
-		sense_drive_status(unit);
+	specify();
+
+	for (k = 0; k < 255; k++) {
+		unsigned char st2;
+
+		if (!(k & 3)) {
+			if (online)
+				break;
+			putchar(PRINT_AT);
+			putchar(5);
+			putchar(0);
+		}
+
+		st2 = sense_drive_status(k);
+		print_value("drive_status: 0x", st2);
+		if (st2 & ST2_READY)
+			online = st2;
+	}
+	if (!online) {
+		putstring("no drives online\r");
+	} else {
+		print_value("drive online after: ", k);
+	}
 	fdc_motor_off();
 	return 0;
 }

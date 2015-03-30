@@ -1,6 +1,14 @@
 int main(void);
+
+unsigned short saved_iy;
+
 int _start(void)
 {
+	__asm
+	di
+	ld	(_saved_iy), iy
+	__endasm;
+
 	return main();
 }
 
@@ -8,10 +16,12 @@ void putchar(char ch)
 {
 	(void) ch;
 	__asm
+	ld	iy, (_saved_iy)
 	ld	hl,#2
 	add	hl,sp
 	ld	a,(hl)
 	rst	0x10
+	ld	(_saved_iy), iy
 	__endasm;
 }
 
@@ -19,6 +29,7 @@ void putstring(const char *ch)
 {
 	ch;
 	__asm
+	ld	iy, (_saved_iy)
 	ld	hl,#2
 	add	hl,sp
 	ld	a, (hl)
@@ -28,12 +39,14 @@ void putstring(const char *ch)
 again:
 	ld	a,(hl)
 	or	a
-	ret	z
+	jr	z, done
 	push	hl
 	rst	0x10
 	pop	hl
 	inc	hl
 	jr	again
+done:
+	ld	(_saved_iy), iy
 	__endasm;
 }
 

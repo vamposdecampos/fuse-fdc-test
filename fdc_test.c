@@ -195,7 +195,7 @@ static void run_test(void)
 	cmd[2] = 0;	/* C */
 	cmd[3] = 0;	/* H */
 	cmd[4] = 1;	/* R */
-	cmd[5] = 2;	/* N */
+	cmd[5] = 1;	/* N */
 	cmd[6] = 18;	/* EOT */
 	cmd[7] = 0x2a;	/* GPL */
 	cmd[8] = 0xff;	/* DTL */
@@ -214,10 +214,18 @@ static void run_test(void)
 		}
 	}
 	read_res(sizeof(res), res);
+
 	putstring("bytes read: 0x");
 	puthex(k >> 8);
 	puthex(k & 0xff);
 	putchar('\r');
+	print_value("ST0=", res[0]);
+	print_value("ST1=", res[1]);
+	print_value("ST2=", res[2]);
+	print_value("C=", res[3]);
+	print_value("H=", res[4]);
+	print_value("R=", res[5]);
+	print_value("N=", res[6]);
 }
 
 int main(void)

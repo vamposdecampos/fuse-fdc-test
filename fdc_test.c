@@ -94,6 +94,7 @@ static void fdc_motor_off(void)
 
 /* generic */
 
+#define MAIN_DRIVES_BUSY	0x0f /* any drive */
 #define MAIN_BUSY		0x10
 #define MAIN_EXEC		0x20
 #define MAIN_DIN		0x40 /* CPU reads data */
@@ -108,6 +109,7 @@ static void fdc_motor_off(void)
 #define CMD_READ_DATA		6
 #define CMD_RECALIBRATE		7
 #define CMD_SENSE_INT		8
+#define CMD_SEEK		0x0f
 /* command flags */
 #define CMD_MT			0x80
 #define CMD_MF			0x40
@@ -165,6 +167,17 @@ static unsigned char sense_drive_status(unsigned char unit)
 	return res[0];
 }
 
+static unsigned char sense_int_status(void)
+{
+	unsigned char cmd[1];
+	unsigned char res[2];
+
+	cmd[0] = CMD_SENSE_INT;
+	write_cmd(sizeof(cmd), cmd);
+	read_res(sizeof(res), res);
+	return res[0];
+}
+
 static void specify(void)
 {
 	unsigned char cmd[3];
@@ -184,6 +197,32 @@ static void reset_fdc(void)
 		fdc_read();
 }
 
+static void recalibrate(void)
+{
+	unsigned char cmd[2];
+
+	cmd[0] = CMD_RECALIBRATE;
+	cmd[1] = 0;
+	write_cmd(sizeof(cmd), cmd);
+
+	while (fdc_status() & MAIN_DRIVES_BUSY)
+		;
+}
+
+static void seek(unsigned char cyl)
+{
+	unsigned char cmd[3];
+
+	cmd[0] = CMD_SEEK;
+	cmd[1] = 0;
+	cmd[2] = cyl;
+	write_cmd(sizeof(cmd), cmd);
+
+	while (fdc_status() & MAIN_DRIVES_BUSY)
+		;
+}
+
+
 static void run_test(void)
 {
 	unsigned char cmd[9];
@@ -192,7 +231,7 @@ static void run_test(void)
 
 	cmd[0] = CMD_READ_DATA | CMD_MF;
 	cmd[1] = 0;
-	cmd[2] = 0;	/* C */
+	cmd[2] = 2;	/* C */
 	cmd[3] = 0;	/* H */
 	cmd[4] = 1;	/* R */
 	cmd[5] = 1;	/* N */
@@ -260,6 +299,10 @@ int main(void)
 		putstring("no drives online\r");
 	} else {
 		print_value("drive online after: ", k);
+		recalibrate();
+		print_value("ST0=", sense_int_status());
+		seek(2);
+		print_value("ST0=", sense_int_status());
 		run_test();
 	}
 	fdc_motor_off();

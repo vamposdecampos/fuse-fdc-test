@@ -1,6 +1,6 @@
 CC	= sdcc
 CFLAGS	= -mz80 --std-sdcc99 --Werror --opt-code-size
-LDFLAGS	= -mz80 --out-fmt-ihx --no-std-crt0 --code-loc 0x8000
+LDFLAGS	= -mz80 --out-fmt-ihx --no-std-crt0 --code-loc 0x8000 --data-loc 0xf000
 PASMO	= pasmo
 OBJCOPY	= objcopy
 

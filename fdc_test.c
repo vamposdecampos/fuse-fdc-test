@@ -373,10 +373,10 @@ static void seek(unsigned char cyl)
 
 static void run_test(void)
 {
-	unsigned char res[7];
+	union fdc_command cmd;
+	union fdc_result res;
 	long k;
 
-	union fdc_command cmd;
 	cmd.rw.code.mt = 1;
 	cmd.rw.code.mfm = 1;
 	cmd.rw.code.sk = 0;
@@ -404,19 +404,19 @@ static void run_test(void)
 			}
 		}
 	}
-	read_res(sizeof(res), res);
+	read_res(sizeof(res.rw), res.raw);
 
 	putstring("bytes read: 0x");
 	puthex(k >> 8);
 	puthex(k & 0xff);
 	putchar('\r');
-	print_value("ST0=", res[0]);
-	print_value("ST1=", res[1]);
-	print_value("ST2=", res[2]);
-	print_value("C=", res[3]);
-	print_value("H=", res[4]);
-	print_value("R=", res[5]);
-	print_value("N=", res[6]);
+	print_value("ST0=", res.rw.st0.raw);
+	print_value("ST1=", res.rw.st1.raw);
+	print_value("ST2=", res.rw.st2.raw);
+	print_value("C=", res.rw.c);
+	print_value("H=", res.rw.h);
+	print_value("R=", res.rw.r);
+	print_value("N=", res.rw.n);
 }
 
 int main(void)

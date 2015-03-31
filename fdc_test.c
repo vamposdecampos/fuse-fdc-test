@@ -94,6 +94,45 @@ static void fdc_motor_off(void)
 
 /* generic */
 
+typedef union fdc_cmd_code {
+	struct {
+		unsigned char command:5;
+		unsigned char sk:1;
+		unsigned char mfm:1;
+		unsigned char mt:1;
+	};
+	unsigned char raw;
+} fdc_cmd_code_t;
+
+typedef union fdc_cmd_head_sel {
+	struct {
+		unsigned char ds:2;
+		unsigned char hds:1;
+		unsigned char _unused:5;
+	};
+	unsigned char raw;
+} fdc_cmd_head_sel_t;
+
+struct fdc_cmd_header {
+	fdc_cmd_code_t code;
+	fdc_cmd_head_sel_t sel;
+};
+
+struct fdc_cmd_rw {
+	fdc_cmd_code_t code;
+	fdc_cmd_head_sel_t sel;
+	unsigned char c, h, r, n;
+	unsigned char eot, gpl, dtl;
+};
+
+union fdc_command {
+	struct fdc_cmd_header hdr;
+	struct fdc_cmd_rw rw;
+	unsigned char raw[0];
+};
+
+
+
 #define MAIN_DRIVES_BUSY	0x0f /* any drive */
 #define MAIN_BUSY		0x10
 #define MAIN_EXEC		0x20
@@ -225,20 +264,24 @@ static void seek(unsigned char cyl)
 
 static void run_test(void)
 {
-	unsigned char cmd[9];
 	unsigned char res[7];
 	long k;
 
-	cmd[0] = CMD_READ_DATA | CMD_MF;
-	cmd[1] = 0;
-	cmd[2] = 2;	/* C */
-	cmd[3] = 0;	/* H */
-	cmd[4] = 1;	/* R */
-	cmd[5] = 1;	/* N */
-	cmd[6] = 18;	/* EOT */
-	cmd[7] = 0x2a;	/* GPL */
-	cmd[8] = 0xff;	/* DTL */
-	write_cmd(sizeof(cmd), cmd);
+	union fdc_command cmd;
+	cmd.rw.code.mt = 1;
+	cmd.rw.code.mfm = 1;
+	cmd.rw.code.sk = 0;
+	cmd.rw.code.command = CMD_READ_DATA;
+	cmd.rw.sel.hds = 0;
+	cmd.rw.sel.ds = 0;
+	cmd.rw.c = 2;
+	cmd.rw.h = 0;
+	cmd.rw.r = 1;
+	cmd.rw.n = 1;
+	cmd.rw.eot = 18;
+	cmd.rw.gpl = 0x2a;
+	cmd.rw.dtl = 0xff;
+	write_cmd(sizeof(cmd.rw), cmd.raw);
 
 	k = 0;
 	for (;;) {

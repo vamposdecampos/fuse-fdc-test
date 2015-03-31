@@ -435,7 +435,7 @@ int main(void)
 	specify();
 
 	for (k = 0; k < 255; k++) {
-		unsigned char st2;
+		fdc_st3_t st3;
 
 		if (!(k & 3)) {
 			if (online)
@@ -445,10 +445,10 @@ int main(void)
 			putchar(0);
 		}
 
-		st2 = sense_drive_status(k);
-		print_value("drive_status: 0x", st2);
-		if (st2 & ST2_READY)
-			online = st2;
+		st3.raw = sense_drive_status(k);
+		print_value("drive_status: 0x", st3.raw);
+		if (st3.rdy)
+			online = st3.raw;
 	}
 	if (!online) {
 		putstring("no drives online\r");

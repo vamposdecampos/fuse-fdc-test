@@ -328,12 +328,15 @@ static unsigned char sense_int_status(void)
 
 static void specify(void)
 {
-	unsigned char cmd[3];
+	union fdc_command cmd;
 
-	cmd[0] = CMD_SPECIFY;
-	cmd[1] = 0xaf;
-	cmd[2] = 3;
-	write_cmd(sizeof(cmd), cmd);
+	cmd.specify.code.raw = CMD_SPECIFY;
+	cmd.specify.hut = 0xf;
+	cmd.specify.srt = 0xa;
+	cmd.specify.nd = 1;
+	cmd.specify.hlt = 1;
+
+	write_cmd(sizeof(cmd.specify), cmd.raw);
 	read_res(0, NULL);
 }
 

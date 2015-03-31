@@ -106,8 +106,8 @@ typedef union fdc_cmd_code {
 
 typedef union fdc_cmd_head_sel {
 	struct {
-		unsigned char ds:2;
-		unsigned char hds:1;
+		unsigned char ds:2;	/* Drive Select */
+		unsigned char hds:1;	/* Head Select */
 		unsigned char _unused:5;
 	};
 	unsigned char raw;
@@ -125,13 +125,122 @@ struct fdc_cmd_rw {
 	unsigned char eot, gpl, dtl;
 };
 
+struct fdc_cmd_format {
+	fdc_cmd_code_t code;
+	fdc_cmd_head_sel_t sel;
+	unsigned char n, sc, gpl, d;
+};
+
+struct fdc_cmd_specify {
+	fdc_cmd_code_t code;
+	unsigned char hut:4;	/* Head Unload Time */
+	unsigned char srt:4;	/* Seek Rate Time */
+	unsigned char nd:1;	/* Non-DMA */
+	unsigned char hlt:7;	/* Head Load Time */
+};
+
+struct fdc_cmd_seek {
+	fdc_cmd_code_t code;
+	fdc_cmd_head_sel_t sel;
+	unsigned char ncn;
+};
+
 union fdc_command {
 	struct fdc_cmd_header hdr;
+	struct fdc_cmd_header read_id;
+	struct fdc_cmd_header recalibrate;
+	struct fdc_cmd_header sense_drive;
 	struct fdc_cmd_rw rw;
+	struct fdc_cmd_format format;
+	fdc_cmd_code_t sense_interrupt;
+	struct fdc_cmd_specify specify;
+	struct fdc_cmd_seek seek;
 	unsigned char raw[0];
 };
 
 
+#define ST0_IC_NT	0	/* Normal Termination */
+#define ST0_IC_AT	1	/* Abnormal Termination */
+#define ST0_IC_IC	2	/* Invalid Command */
+#define ST0_IC_ATRDY	3	/* Abnormal Termination due to Ready state change */
+
+typedef union fdc_st0 {
+	struct {
+		unsigned char us:2;	/* 03 Unit Select */
+		unsigned char hd:1;	/* 04 Head */
+		unsigned char nr:1;	/* 08 Not Ready */
+		unsigned char ec:1;	/* 10 Equipment Check */
+		unsigned char se:1;	/* 20 Seek End */
+		unsigned char ic:2;	/* c0 Interupt Code */
+	};
+	unsigned char raw;
+} fdc_st0_t;
+
+typedef union fdc_st1 {
+	struct {
+		unsigned char ma:1;	/* 01 Missing Address mark */
+		unsigned char nw:1;	/* 02 Not Writeable */
+		unsigned char nd:1;	/* 04 No Data */
+		unsigned char _unused1:1;
+		unsigned char or:1;	/* 10 OverRun */
+		unsigned char de:1;	/* 20 Data Error */
+		unsigned char _unused2:1;
+		unsigned char en:1;	/* 80 End of cylinder */
+	};
+	unsigned char raw;
+} fdc_st1_t;
+
+typedef union fdc_st2 {
+	struct {
+		unsigned char md:1;	/* 01 Missing address mark in Data field */
+		unsigned char bc:1;	/* 02 Bad Cylinder */
+		unsigned char sn:1;	/* 04 Scan Not satisfied */
+		unsigned char sh:1;	/* 08 Scan equal Hit */
+		unsigned char wc:1;	/* 10 Wrong Cylinder */
+		unsigned char dd:1;	/* 20 Data error in Data field */
+		unsigned char cm:1;	/* 40 Control Mark */
+		unsigned char _unused:1;
+	};
+	unsigned char raw;
+} fdc_st2_t;
+
+typedef union fdc_st3 {
+	struct {
+		unsigned char us:2;	/* 03 Unit Select */
+		unsigned char hd:1;	/* 04 Head address */
+		unsigned char ts:1;	/* 08 Two Side */
+		unsigned char t0:1;	/* 10 Track 0 */
+		unsigned char rdy:1;	/* 20 Ready */
+		unsigned char wp:1;	/* 40 Write Protected */
+		unsigned char ft:1;	/* 80 Fault */
+	};
+	unsigned char raw;
+} fdc_st3_t;
+
+struct fdc_res_rw {
+	fdc_st0_t st0;
+	fdc_st1_t st1;
+	fdc_st2_t st2;
+	unsigned char c, h, r, n;
+};
+
+struct fdc_res_sense_drive {
+	fdc_st3_t st3;
+};
+
+struct fdc_res_sense_interrupt {
+	fdc_st0_t st0;
+	unsigned char pcn;
+};
+
+union fdc_result {
+	struct fdc_res_rw rw;
+	struct fdc_res_rw read_id;
+	struct fdc_res_rw format;
+	struct fdc_res_sense_drive sense_drive;
+	struct fdc_res_sense_interrupt sense_interrupt;
+	unsigned char raw[0];
+};
 
 #define MAIN_DRIVES_BUSY	0x0f /* any drive */
 #define MAIN_BUSY		0x10

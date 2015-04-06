@@ -394,7 +394,7 @@ static void seek(unsigned char cyl)
 }
 
 
-static void run_test(void)
+static void test_read(void)
 {
 	union fdc_command cmd;
 	union fdc_result res;
@@ -488,6 +488,108 @@ static void test_format(void)
 	print_value("N=", res.format.n);
 }
 
+static const char *rw_res_names[] = {
+	"ST0",
+	"ST1",
+	"ST2",
+	"C",
+	"H",
+	"R",
+	"N",
+};
+
+struct test {
+	union fdc_command cmd;
+	unsigned char cmd_len;
+	union fdc_result res; /* expected result */
+	unsigned char res_len;
+	unsigned short data_len;
+	char **res_names;
+};
+
+struct test tests[] = {
+	{
+		.cmd.rw = {
+			.code.raw	= CMD_MF | CMD_READ_DATA,
+			.eot		= 18,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.hds = 0,
+			.c = 2, .h = 0, .r = 1, .n = 1,
+		},
+		.data_len = 42,
+		.res.rw = {
+			.c = 2, .h = 0, .r = 2, .n = 1,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
+};
+#define ARRAY_SIZE(a)	(sizeof(a) / sizeof(a[0]))
+
+
+static void assert_fail_eq(const char *what, unsigned short expected, unsigned short actual)
+{
+	putstring(what);
+	putstring(" FAIL ");
+	puthex16(expected);
+	putstring(" != ");
+	puthex16(actual);
+	putchar('\r');
+}
+#define ASSERT_EQ(what, expected, actual) do { \
+	if ((expected) != (actual)) { \
+		assert_fail_eq(what, expected, actual); \
+		goto fail; \
+	} \
+} while (0)
+
+static void run_one_test(struct test *test)
+{
+	union fdc_result res;
+	unsigned short k;
+
+	/* TODO: set drive */
+	write_cmd(test->cmd_len, test->cmd.raw);
+
+	k = 0;
+	for (;;) {
+		unsigned char status = fdc_status();
+		if (!(status & MAIN_EXEC))
+			break;
+		if (status & MAIN_RQM) {
+			if (status & MAIN_DIN) {
+				k++;
+				if (k == test->data_len)
+					fdc_tc(1);
+				fdc_read();
+			}
+		}
+	}
+	fdc_tc(0);
+	read_res(sizeof(res.rw), res.raw);
+
+	ASSERT_EQ("bytes_read", test->data_len, k);
+	for (k = 0; k < test->res_len; k++)
+		ASSERT_EQ(test->res_names[k], test->res.raw[k], res.raw[k]);
+	putstring("done\r");
+fail:
+}
+
+static void run_test(void)
+{
+	unsigned char n;
+	struct test *test;
+
+	for (test = tests, n = 0; n < ARRAY_SIZE(tests); test++, n++) {
+		putchar('t');
+		puthex(n);
+		putchar(' ');
+		run_one_test(test);
+	}
+}
+
 int main(void)
 {
 	unsigned char k;
@@ -507,7 +609,7 @@ int main(void)
 			if (online)
 				break;
 			putchar(PRINT_AT);
-			putchar(5);
+			putchar(4);
 			putchar(0);
 		}
 

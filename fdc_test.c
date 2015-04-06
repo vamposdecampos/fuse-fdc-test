@@ -257,6 +257,8 @@ union fdc_result {
 #define CMD_READ_DATA		6
 #define CMD_RECALIBRATE		7
 #define CMD_SENSE_INT		8
+#define CMD_READ_ID		0x0a
+#define CMD_FORMAT		0x0d
 #define CMD_SEEK		0x0f
 /* command flags */
 #define CMD_MT			0x80
@@ -420,6 +422,51 @@ static void run_test(void)
 	print_value("H=", res.rw.h);
 	print_value("R=", res.rw.r);
 	print_value("N=", res.rw.n);
+}
+
+static void test_format(void)
+{
+	union fdc_command cmd;
+	union fdc_result res;
+	long k;
+
+	cmd.format.code.mt = 0;
+	cmd.format.code.mfm = 1;
+	cmd.format.code.sk = 0;
+	cmd.format.code.command = CMD_FORMAT;
+	cmd.format.sel.hds = 0;
+	cmd.format.sel.ds = 0;
+	cmd.format.n = 1;
+	cmd.format.sc = 18;
+	cmd.format.gpl = 0x2a;
+	cmd.format.d = 0xe5;
+	write_cmd(sizeof(cmd.format), cmd.raw);
+
+	k = 0;
+	for (;;) {
+		unsigned char status = fdc_status();
+		if (!(status & MAIN_EXEC))
+			break;
+		if (status & MAIN_RQM) {
+			if (!(status & MAIN_DIN)) {
+				k++;
+				fdc_write(k);
+			}
+		}
+	}
+	read_res(sizeof(res.format), res.raw);
+
+	putstring("bytes written: 0x");
+	puthex(k >> 8);
+	puthex(k & 0xff);
+	putchar('\r');
+	print_value("ST0=", res.format.st0.raw);
+	print_value("ST1=", res.format.st1.raw);
+	print_value("ST2=", res.format.st2.raw);
+	print_value("C=", res.format.c);
+	print_value("H=", res.format.h);
+	print_value("R=", res.format.r);
+	print_value("N=", res.format.n);
 }
 
 int main(void)

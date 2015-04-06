@@ -505,6 +505,7 @@ struct test {
 	unsigned char res_len;
 	unsigned short data_len;
 	char **res_names;
+	unsigned short tc:1;
 };
 
 struct test tests[] = {
@@ -518,8 +519,29 @@ struct test tests[] = {
 			.c = 2, .h = 0, .r = 1, .n = 1,
 		},
 		.data_len = 42,
+		.tc = 1,
 		.res.rw = {
 			.c = 2, .h = 0, .r = 2, .n = 1,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
+	{
+		.cmd.rw = {
+			.code.raw	= CMD_MF | CMD_READ_DATA,
+			.eot		= 18,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.hds = 0,
+			.c = 2, .h = 0, .r =  1, .n = 1,
+		},
+		.data_len = 18 * 256,
+		.tc = 0,
+		.res.rw = {
+			.c = 2, .h = 0, .r = 18, .n = 1, /* ? */
+			.st0.raw = 0x40,
+			.st1.raw = 0x80,
 		},
 		.cmd_len = sizeof(struct fdc_cmd_rw),
 		.res_len = sizeof(struct fdc_res_rw),
@@ -561,7 +583,7 @@ static void run_one_test(struct test *test)
 		if (status & MAIN_RQM) {
 			if (status & MAIN_DIN) {
 				k++;
-				if (k == test->data_len)
+				if (test->tc && k == test->data_len)
 					fdc_tc(1);
 				fdc_read();
 			}

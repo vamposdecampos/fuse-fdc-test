@@ -92,6 +92,13 @@ static void fdc_motor_off(void)
 	plus3_memory_port = 4;
 }
 
+/* this is hacked in fuse, there is no TC output on the real +3 */
+static void fdc_tc(unsigned char tc)
+{
+	plus3_memory_port = 4 | 8 | (tc ? 0x80 : 0);
+}
+
+
 /* generic */
 
 typedef union fdc_cmd_code {
@@ -404,11 +411,14 @@ static void run_test(void)
 			break;
 		if (status & MAIN_RQM) {
 			if (status & MAIN_DIN) {
-				fdc_read();
 				k++;
+				if (k == 3)
+					fdc_tc(1);
+				fdc_read();
 			}
 		}
 	}
+	fdc_tc(0);
 	read_res(sizeof(res.rw), res.raw);
 
 	putstring("bytes read: 0x");

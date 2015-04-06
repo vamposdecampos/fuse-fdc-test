@@ -9,6 +9,11 @@ int _start(void)
 {
 	__asm
 	di
+	ld	bc, #l__INITIALIZER
+	ld	de, #s__INITIALIZED
+	ld	hl, #s__INITIALIZER
+	ldir
+
 	ld	(_saved_iy), iy
 	__endasm;
 

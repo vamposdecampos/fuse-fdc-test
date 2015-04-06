@@ -61,6 +61,12 @@ void puthex(unsigned char val)
 	putchar(hex_str[val & 0xf]);
 }
 
+void puthex16(unsigned short val)
+{
+	puthex(val >> 8);
+	puthex(val & 0xff);
+}
+
 /* Spectrum +3 */
 
 __sfr __banked __at(0x3ffd) fdc_data_port;
@@ -422,8 +428,7 @@ static void run_test(void)
 	read_res(sizeof(res.rw), res.raw);
 
 	putstring("bytes read: 0x");
-	puthex(k >> 8);
-	puthex(k & 0xff);
+	puthex16(k);
 	putchar('\r');
 	print_value("ST0=", res.rw.st0.raw);
 	print_value("ST1=", res.rw.st1.raw);
@@ -467,8 +472,7 @@ static void test_format(void)
 	read_res(sizeof(res.format), res.raw);
 
 	putstring("bytes written: 0x");
-	puthex(k >> 8);
-	puthex(k & 0xff);
+	puthex16(k);
 	putchar('\r');
 	print_value("ST0=", res.format.st0.raw);
 	print_value("ST1=", res.format.st1.raw);

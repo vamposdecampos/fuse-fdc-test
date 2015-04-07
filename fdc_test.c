@@ -529,6 +529,43 @@ struct test tests[] = {
 	},
 	{
 		.cmd.rw = {
+			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
+			.eot		= 18,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.hds = 0,
+			.c = 2, .h = 0, .r = 17, .n = 1,
+		},
+		.data_len = 3 * 256,
+		.tc = 1,
+		.res.rw = {
+			.c = 2, .h = 1, .r = 2, .n = 1,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
+	{
+		.cmd.rw = {
+			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
+			.eot		= 18,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.raw = 1 << 2,
+			.c = 2, .h = 1, .r = 18, .n = 1,
+		},
+		.data_len = 6,
+		.tc = 1,
+		.res.rw = {
+			.c = 3, .h = 0, .r = 1, .n = 1,
+			.st0.raw = 1 << 2,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
+	{
+		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
 			.gpl		= 0x2a,
@@ -540,6 +577,26 @@ struct test tests[] = {
 		.tc = 0,
 		.res.rw = {
 			.c = 2, .h = 0, .r = 18, .n = 1, /* ? */
+			.st0.raw = 0x40,
+			.st1.raw = 0x80,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
+	{
+		.cmd.rw = {
+			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
+			.eot		= 18,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.hds = 0,
+			.c = 2, .h = 0, .r =  1, .n = 1,
+		},
+		.data_len = 2 * 18 * 256,
+		.tc = 0,
+		.res.rw = {
+			.c = 3, .h = 0, .r = 1, .n = 1,
 			.st0.raw = 0x40,
 			.st1.raw = 0x80,
 		},

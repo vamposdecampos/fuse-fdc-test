@@ -19,7 +19,7 @@ all:	$(TARGET).tap
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $<
 
 %.asm: %.c
-	$(CC) $(CFLAGS) -a -o $@ $<
+	$(CC) $(CFLAGS) -S -o $@ $<
 
 clean:
 	rm -f $(TARGET).tap $(TARGET).o $(TARGET).hex $(TARGET).bin $(TARGET).rel $(TARGET).lst $(TARGET).lk $(TARGET).noi $(TARGET).map $(TARGET).sym

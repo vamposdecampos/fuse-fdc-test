@@ -609,6 +609,26 @@ struct test tests[] = {
 	},
 	{
 		.cmd.rw = {
+			.code.raw	= CMD_MF | CMD_READ_DATA,
+			.eot		= 2,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.raw = 0,
+			.c = 2, .h = 0, .r =  1, .n = 1,
+		},
+		.data_len = 2 * 256,
+		.tc = 0,
+		.res.rw = {
+			.c = 2, .h = 0, .r =  2, .n = 1,
+			.st0.raw = 0x40,
+			.st1.raw = 0x80,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
+	{
+		.cmd.rw = {
 			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
 			.eot		= 2,
 			.gpl		= 0x2a,

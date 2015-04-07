@@ -509,6 +509,7 @@ struct test {
 };
 
 struct test tests[] = {
+	/* tests using Terminal Count */
 	{
 		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
@@ -559,6 +560,28 @@ struct test tests[] = {
 		.res.rw = {
 			.c = 3, .h = 0, .r = 1, .n = 1,
 			.st0.raw = 1 << 2,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
+
+	/* tests without Terminal Count (thus longer transfers) */
+	{
+		.cmd.rw = {
+			.code.raw	= CMD_MF | CMD_READ_DATA,
+			.eot		= 4,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.hds = 0,
+			.c = 2, .h = 0, .r = 3, .n = 1,
+		},
+		.data_len = 2 * 256,
+		.tc = 0,
+		.res.rw = {
+			.c = 2, .h = 0, .r = 4, .n = 1,
+			.st0.raw = 0x40,
+			.st1.raw = 0x80,
 		},
 		.cmd_len = sizeof(struct fdc_cmd_rw),
 		.res_len = sizeof(struct fdc_res_rw),

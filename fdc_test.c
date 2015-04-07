@@ -647,6 +647,25 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
+	{
+		.cmd.rw = {
+			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
+			.eot		= 18,
+			.gpl		= 0x2a,
+			.dtl		= 0xff,
+			.sel.raw = 1 << 2,
+			.c = 2, .h = 1, .r =  1, .n = 1,
+		},
+		.data_len = 18 * 256,
+		.tc = 0,
+		.res.rw = {
+			.c = 3, .h = 0, .r = 1, .n = 1,
+			.st0.raw = 1 << 2,
+		},
+		.cmd_len = sizeof(struct fdc_cmd_rw),
+		.res_len = sizeof(struct fdc_res_rw),
+		.res_names = rw_res_names,
+	},
 };
 #define ARRAY_SIZE(a)	(sizeof(a) / sizeof(a[0]))
 

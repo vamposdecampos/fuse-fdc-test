@@ -537,7 +537,7 @@ struct test tests[] = {
 			.sel.hds = 0,
 			.c = 2, .h = 0, .r = 17, .n = 1,
 		},
-		.data_len = 3 * 256,
+		.data_len = 2 * 256 + 1,
 		.tc = 1,
 		.res.rw = {
 			.c = 2, .h = 1, .r = 2, .n = 1,
@@ -683,9 +683,21 @@ static void run_test(void)
 {
 	unsigned char n;
 	struct test *test;
+	unsigned short sec_len;
 
 	for (test = tests, n = 0; n < ARRAY_SIZE(tests); test++, n++) {
 		putchar('t');
+		puthex(n);
+		putchar(' ');
+		run_one_test(test);
+	}
+	for (test = tests, n = 0; n < ARRAY_SIZE(tests); test++, n++) {
+		if (!test->tc)
+			continue;
+		/* try again with sector-boundary transfer size */
+		sec_len = 128 << test->cmd.rw.n;
+		test->data_len = (test->data_len + sec_len - 1) & ~(sec_len - 1);
+		putchar('l');
 		puthex(n);
 		putchar(' ');
 		run_one_test(test);

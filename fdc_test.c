@@ -692,6 +692,7 @@ struct test tests[] = {
 
 static void assert_fail_eq(const char *what, unsigned short expected, unsigned short actual)
 {
+	putchar('\r');
 	putstring(what);
 	putstring(" FAIL ");
 	puthex16(expected);
@@ -734,7 +735,6 @@ static void run_one_test(struct test *test)
 	ASSERT_EQ("bytes_read", test->data_len, k);
 	for (k = 0; k < test->res_len; k++)
 		ASSERT_EQ(test->res_names[k], test->res.raw[k], res.raw[k]);
-	putstring("done\r");
 fail:
 }
 
@@ -802,5 +802,6 @@ int main(void)
 		run_test();
 	}
 	fdc_motor_off();
+	putstring("\rdone.");
 	return 0;
 }

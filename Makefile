@@ -4,7 +4,11 @@ LDFLAGS	= -mz80 --out-fmt-ihx --no-std-crt0 --code-loc 0x8000 --data-loc 0xf000
 PASMO	= pasmo
 OBJCOPY	= objcopy
 
+# override on command line
+FLAVOR	= plus3
 
+CFLAGS	+= -DFLAVOR_$(FLAVOR)
+FLAVORS	= plus3 plus3tc hc cobra
 TARGET	= fdc_test
 
 all:	$(TARGET).tap

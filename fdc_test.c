@@ -72,7 +72,8 @@ void puthex16(unsigned short val)
 	puthex(val & 0xff);
 }
 
-/* Spectrum +3 */
+
+#if defined(FLAVOR_plus3) || defined(FLAVOR_plus3tc)
 
 __sfr __banked __at(0x3ffd) fdc_data_port;
 __sfr __banked __at(0x2ffd) fdc_status_port;
@@ -103,11 +104,30 @@ static void fdc_motor_off(void)
 	plus3_memory_port = 4;
 }
 
+#ifdef FLAVOR_plus3tc
+
+static const char *flavor = "Spectrum +3 w/ TC hack";
+static const int tc_support = 1;
+
 /* this is hacked in fuse, there is no TC output on the real +3 */
 static void fdc_tc(unsigned char tc)
 {
 	plus3_memory_port = 4 | 8 | (tc ? 0x80 : 0);
 }
+
+#else
+
+const char *flavor = "Spectrum +3";
+static const int tc_support = 0;
+
+static void fdc_tc(unsigned char tc)
+{
+	(void) tc;
+}
+
+#endif
+
+#endif
 
 
 /* generic */
@@ -782,13 +802,15 @@ static void run_test(void)
 	unsigned short sec_len;
 
 	for (test = tests, n = 0; n < ARRAY_SIZE(tests); test++, n++) {
+		if (!tc_support && test->tc)
+			continue;
 		putchar('t');
 		puthex(n);
 		putchar(' ');
 		run_one_test(test);
 	}
 	for (test = tests, n = 0; n < ARRAY_SIZE(tests); test++, n++) {
-		if (!test->tc)
+		if (!test->tc || !tc_support)
 			continue;
 		/* try again with sector-boundary transfer size */
 		sec_len = 128 << test->cmd.rw.n;
@@ -806,6 +828,8 @@ int main(void)
 	unsigned char online = 0;
 
 	putstring("uPD765 / i8272 FDC tester\r");
+	putstring(flavor);
+	putchar('\r');
 
 	fdc_motor_on();
 

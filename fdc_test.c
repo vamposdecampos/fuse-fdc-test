@@ -510,7 +510,7 @@ struct test {
 
 struct test tests[] = {
 	/* tests using Terminal Count */
-	{
+	{	/* 0 */
 		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
@@ -528,7 +528,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 1 */
 		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
@@ -546,7 +546,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 2 */
 		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
@@ -565,7 +565,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 3 */
 		.cmd.rw = {
 			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
@@ -583,7 +583,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 4 */
 		.cmd.rw = {
 			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
@@ -604,7 +604,7 @@ struct test tests[] = {
 	},
 
 	/* tests without Terminal Count (thus longer transfers) */
-	{
+	{	/* 5 */
 		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
 			.eot		= 4,
@@ -624,7 +624,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 6 */
 		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
@@ -644,7 +644,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 7 */
 		.cmd.rw = {
 			.code.raw	= CMD_MF | CMD_READ_DATA,
 			.eot		= 2,
@@ -664,7 +664,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 8 */
 		.cmd.rw = {
 			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
 			.eot		= 2,
@@ -684,7 +684,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* 9 */
 		.cmd.rw = {
 			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
 			.eot		= 18,
@@ -704,7 +704,7 @@ struct test tests[] = {
 		.res_len = sizeof(struct fdc_res_rw),
 		.res_names = rw_res_names,
 	},
-	{
+	{	/* a */
 		.cmd.rw = {
 			.code.raw	= CMD_MT | CMD_MF | CMD_READ_DATA,
 			.eot		= 18,

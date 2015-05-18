@@ -336,11 +336,21 @@ static void read_res(unsigned char count, unsigned char *res)
 	}
 }
 
-static void print_value(const char *what, unsigned char val)
+static void print_value_sep(const char *what, unsigned char val, char sep)
 {
 	putstring(what);
 	puthex(val);
-	putchar('\r');
+	putchar(sep);
+}
+
+static void print_value(const char *what, unsigned char val)
+{
+	print_value_sep(what, val, '\r');
+}
+
+static void print_value_cont(const char *what, unsigned char val)
+{
+	print_value_sep(what, val, ' ');
 }
 
 static unsigned char sense_drive_status(unsigned char unit)
@@ -464,21 +474,23 @@ static void test_read(void)
 	print_value("N=", res.rw.n);
 }
 
-static void test_format(void)
+static void test_format(unsigned char side)
 {
 	union fdc_command cmd;
 	union fdc_result res;
 	long k;
+	unsigned char id_data[4] = { 2, side, 1, 1 }; /* C, H, R, N */
 
 	cmd.format.code.mt = 0;
 	cmd.format.code.mfm = 1;
 	cmd.format.code.sk = 0;
 	cmd.format.code.command = CMD_FORMAT;
-	cmd.format.sel.hds = 0;
+	cmd.format.sel.raw = 0;
+	cmd.format.sel.hds = side;
 	cmd.format.sel.ds = 0;
-	cmd.format.n = 1;
+	cmd.format.n = id_data[3];
 	cmd.format.sc = 18;
-	cmd.format.gpl = 0x2a;
+	cmd.format.gpl = 0x10; /* 0x36 overruns the track */
 	cmd.format.d = 0xe5;
 	write_cmd(sizeof(cmd.format), cmd.raw);
 
@@ -489,8 +501,10 @@ static void test_format(void)
 			break;
 		if (status & MAIN_RQM) {
 			if (!(status & MAIN_DIN)) {
+				fdc_write(id_data[k & 3]);
 				k++;
-				fdc_write(k);
+				if (!(k & 3))
+					id_data[2]++; /* R */
 			}
 		}
 	}
@@ -499,12 +513,12 @@ static void test_format(void)
 	putstring("bytes written: 0x");
 	puthex16(k);
 	putchar('\r');
-	print_value("ST0=", res.format.st0.raw);
-	print_value("ST1=", res.format.st1.raw);
+	print_value_cont("ST0=", res.format.st0.raw);
+	print_value_cont("ST1=", res.format.st1.raw);
 	print_value("ST2=", res.format.st2.raw);
-	print_value("C=", res.format.c);
-	print_value("H=", res.format.h);
-	print_value("R=", res.format.r);
+	print_value_cont("C=", res.format.c);
+	print_value_cont("H=", res.format.h);
+	print_value_cont("R=", res.format.r);
 	print_value("N=", res.format.n);
 }
 
@@ -860,6 +874,8 @@ int main(void)
 		print_value("ST0=", sense_int_status());
 		seek(2);
 		print_value("ST0=", sense_int_status());
+		test_format(0);
+		test_format(1);
 		run_test();
 	}
 	fdc_motor_off();

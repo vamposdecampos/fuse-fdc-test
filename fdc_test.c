@@ -28,7 +28,9 @@ void putchar(char ch)
 	ld	hl,#2
 	add	hl,sp
 	ld	a,(hl)
+	ei
 	rst	0x10
+	di
 	ld	(_saved_iy), iy
 	__endasm;
 }
@@ -44,6 +46,7 @@ void putstring(const char *ch)
 	inc	hl
 	ld	h, (hl)
 	ld	l, a
+	ei
 again:
 	ld	a,(hl)
 	or	a
@@ -54,6 +57,7 @@ again:
 	inc	hl
 	jr	again
 done:
+	di
 	ld	(_saved_iy), iy
 	__endasm;
 }
